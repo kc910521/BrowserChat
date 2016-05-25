@@ -1,6 +1,6 @@
 # ChatOnline
 online chat and offline message
-websocket + redis
+/r websocket + redis
 
 #running enviroment
 run in
