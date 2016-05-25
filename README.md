@@ -1,5 +1,6 @@
 # ChatOnline
-chat online javaweb html5
+online chat and offline message
+websocket + redis
 
 #running enviroment
 run in
