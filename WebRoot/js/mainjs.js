@@ -1,7 +1,7 @@
 /**
  * 
  */
-var username = window.prompt("尊姓大名:");
+var username = window.prompt("您的尊姓大名:");
 var ws;
 document.write("Welcome<p id=\"username\">"+username+"</p>");
 
@@ -11,8 +11,6 @@ if (!window.WebSocket && window.MozWebSocket){
 if (!window.WebSocket){
 	 alert("No Support WebSocket");
 }
-
-
 
  $(document).ready(function(){
 	 $("#sendbutton").attr("disabled", false);
@@ -24,6 +22,11 @@ if (!window.WebSocket){
 	 }else {
 		 window.location.reload();
 	 }
+	 //快捷选择人物效果
+	 $(".container").on("click",".name_for_click",function(){
+		 findContacts($(this).text());
+	 });
+	 
  });
 
  function sendMessage()
@@ -82,8 +85,11 @@ if (!window.WebSocket){
  //进入之后从redis获得消息
  function takeLastMsg(uname){
 	 $.ajax({
-		 type : "GET",
-		 url : "MsgSaver?uname="+uname,
+		 type : "POST",
+		 url : "MsgSaver",
+		 data : {
+			 uname : uname+""
+		 },
 		 sync: true,
 		 success : function(dt){
 			 //alert(dt);
@@ -100,10 +106,14 @@ if (!window.WebSocket){
 			 alert("connect error");
 		 }
 	 });
-	 
-	 
  }
  
  function showGettedMsg(from,to,msgBody){
-	 $(".msg_poll").append("<p>"+from+" 对"+((to == undefined || to == "" )?"你":to)+"说:‘"+msgBody+"’<\/p>");
+	 $(".msg_poll").append("<p><span class=\"name_for_click\">"+from+"<\/span> 对<span class=\"name_for_click\">"+((to == undefined || to == "" )?"你":to)+"<\/span>说:‘"+msgBody+"’<\/p>");
+ }
+ //点击传参，快速设置人命到接收者input
+ function findContacts(user){
+	 if ("你" != user){
+		 $("#othername").val(user+"");
+	 }
  }

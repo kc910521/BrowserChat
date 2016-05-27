@@ -13,6 +13,7 @@ import org.apache.catalina.websocket.WebSocketServlet;
 public class WSocket extends WebSocketServlet {
 
 	public static int USERNUMBER = 1;
+	
 	public final Set<ChatWebSocket> users = new CopyOnWriteArraySet<ChatWebSocket>();
 	/**
 	 * 
