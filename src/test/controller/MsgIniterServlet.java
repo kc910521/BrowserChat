@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+
 import test.redis.impl.CacheDaoImpl;
 
 public class MsgIniterServlet extends HttpServlet{
@@ -38,7 +41,7 @@ public class MsgIniterServlet extends HttpServlet{
 		resp.setCharacterEncoding("GBK");  
 		resp.setContentType("text/html; charset=GBK"); 
 		PrintWriter pw = resp.getWriter();
-		pw.print(alist);
+		pw.print(JSON.toJSONString(alist));
 		pw.flush();
 		pw.close();
 	}
