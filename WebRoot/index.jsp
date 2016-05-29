@@ -41,8 +41,12 @@
 				<td><input type="text" id="message"></td>
 			</tr>
 			<tr>
-				<td><input id="sendbutton" type="button" value="发送"
-					onClick="click" disabled="true" /></td>
+				<td>
+					<input id="sendbutton" type="button" value="发送"
+					onClick="click" disabled="true" />
+					<input id="monitor" type="button" value="监听"
+					onClick="monitor_click()" />
+				</td>
 			</tr>
 		</table>
 		<div class="msg_poll">

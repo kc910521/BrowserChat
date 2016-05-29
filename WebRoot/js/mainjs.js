@@ -9,7 +9,7 @@ if (!window.WebSocket && window.MozWebSocket){
 	 window.WebSocket=window.MozWebSocket;
 }
 if (!window.WebSocket){
-	 alert("No Support WebSocket");
+	 alert("No WebSocket Support");
 }
 
  $(document).ready(function(){
@@ -17,7 +17,7 @@ if (!window.WebSocket){
 	 if (username != undefined && username != ""){
 		 startWebSocket();
 		 $("#sendbutton").click(sendMessage);
-	     takeLastMsg(username);
+	     takeLastMsg();
 	 }else {
 		 window.location.reload();
 	 }
@@ -103,29 +103,42 @@ if (!window.WebSocket){
      }
  }
  //进入之后从redis获得消息
- function takeLastMsg(uname){
+ function takeLastMsg(){
 	 $.ajax({
 		 type : "POST",
 		 url : "MsgSaver",
 		 data : {
-			 uname : uname+""
+			 uname : username+""
 		 },
 		 sync: true,
 		 success : function(dt){
-			 //alert("inredis:"+dt);
 			 if (dt.length > 2){
 				 var json1 = JSON.parse(dt);
-				 //console.log(JSON.parse(json1[0]).from+",e1:"+json1[0]);
+				 var jsOj = null;
 				 for (var idx = 0; idx < json1.length; idx ++){
-					 var jsOj = JSON.parse(json1[idx]);
-					 $(".msg_poll").append("<p>"+jsOj.from+" 对 "+jsOj.to+" 说： "+jsOj.content+"<\/p>");
+					 jsOj = JSON.parse(json1[idx]);
+					 showGettedMsg(jsOj.from,jsOj.to,jsOj.content);
 				 }
 				 //var msgArr = dt.replace(/(\[|\])/g,"").split(",");
-//				 for (var a = 0;msgArr != undefined&&msgArr.length>0&&a < msgArr.length;a ++){
-//					 $(".msg_poll").append("<p>"+msgArr[a]+"<\/p>");
-//				 }
 			 }
-			 //alert("dy:"+msgArr);
+		 },
+		 error : function (){
+			 alert("connect error");
+		 }
+	 });
+ }
+ 
+ //监听的方法
+ function monitor_click(){
+	 $.ajax({
+		 type : "GET",
+		 url : "monitorReg",
+		 data : {
+			 uname : username+""
+		 },
+		 sync: true,
+		 success : function(dt){
+			 $(".msg_poll").append("<p>监听开启！10秒后停止...<\/p>");
 		 },
 		 error : function (){
 			 alert("connect error");
@@ -134,7 +147,13 @@ if (!window.WebSocket){
  }
  
  function showGettedMsg(from,to,msgBody){
-	 $(".msg_poll").append("<p><span class=\"name_for_click\">"+from+"<\/span> 对<span class=\"name_for_click\">"+((to == undefined || to == "" )?"你":to)+"<\/span>说:‘"+msgBody+"’<\/p>");
+	 $(".msg_poll").append("<p><span class=\"name_for_click\">"+
+			 ((from == "" || from == username )?
+					 "你":from)
+			 +"<\/span> 对" +
+	 		"<span class=\"name_for_click\">"
+			 +((to == undefined || to == "" || to == username )?
+			 "你":to)+"<\/span>说:‘"+msgBody+"’<\/p>");
  }
  //点击传参，快速设置username到接收者input
  function findContacts(user){

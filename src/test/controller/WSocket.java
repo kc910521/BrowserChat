@@ -14,7 +14,7 @@ public class WSocket extends WebSocketServlet {
 
 	public static int USERNUMBER = 1;
 	
-	public final Set<ChatWebSocket> users = new CopyOnWriteArraySet<ChatWebSocket>();
+	public static final Set<ChatWebSocket> users = new CopyOnWriteArraySet<ChatWebSocket>();
 	/**
 	 * 
 	 */
@@ -24,7 +24,7 @@ public class WSocket extends WebSocketServlet {
 	protected StreamInbound createWebSocketInbound(String arg0,
 			HttpServletRequest arg1) {
 		// TODO Auto-generated method stub
-		return new ChatWebSocket(users);
+		return new ChatWebSocket();
 	}
 	
 }

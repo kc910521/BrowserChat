@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 
+import test.redis.CacheProxy;
+import test.redis.ICacheDao;
 import test.redis.impl.CacheDaoImpl;
 
 public class MsgIniterServlet extends HttpServlet{
@@ -21,7 +23,7 @@ public class MsgIniterServlet extends HttpServlet{
 	 * 
 	 */
 	private static final long serialVersionUID = -7780956401325936181L;
-	private CacheDaoImpl cacheDaoImpl = null;
+	private ICacheDao cacheDaoImpl1 = null;
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -36,7 +38,7 @@ public class MsgIniterServlet extends HttpServlet{
 		List<String> alist = null;
 		if (uname != null && !"".equals(uname)){
 			//读取redis中，以本用户名为key的信息
-			alist = cacheDaoImpl.loadListBy(uname);
+			alist = cacheDaoImpl1.loadListBy(uname);
 		}
 		resp.setCharacterEncoding("GBK");  
 		resp.setContentType("text/html; charset=GBK"); 
@@ -48,7 +50,7 @@ public class MsgIniterServlet extends HttpServlet{
 	@Override
 	public void init() throws ServletException {
 		// TODO Auto-generated method stub
-		cacheDaoImpl = new CacheDaoImpl();
+		cacheDaoImpl1 = new CacheProxy(0);
 		super.init();
 	}
 	

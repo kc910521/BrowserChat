@@ -1,6 +1,7 @@
 package test.controller;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.Set;
@@ -14,6 +15,8 @@ import org.apache.catalina.websocket.MessageInbound;
 import org.apache.catalina.websocket.WsOutbound;
 
 import test.model.Msger;
+import test.redis.CacheProxy;
+import test.redis.ICacheDao;
 import test.redis.impl.CacheDaoImpl;
 import test.utils.MsgTools;
 
@@ -24,14 +27,16 @@ public class ChatWebSocket extends MessageInbound{
 	
 	private String userId;
 	
-    private Set<ChatWebSocket> users = new CopyOnWriteArraySet<ChatWebSocket>();
+    //private Set<ChatWebSocket> users = new CopyOnWriteArraySet<ChatWebSocket>();
     
-    private CacheDaoImpl cacheDaoImpl = new CacheDaoImpl();
+    private ICacheDao cacheDaoImpl1 = new CacheProxy(0);
     
-    public ChatWebSocket(Set<ChatWebSocket> users) {
-    	this.users.clear();
+    private ICacheDao cacheDaoImpl2 = new CacheProxy(1);
+    
+    public ChatWebSocket() {
+/*    	this.users.clear();
         this.users = null;
-        this.users = users;
+        this.users = users;*/
     }
     
     /**
@@ -48,68 +53,66 @@ public class ChatWebSocket extends MessageInbound{
     		if (msger.isInRegister()){
     			this.registerUser(msger);
     		}else {
-    			this.pushMsg(msger);
+    			this.pushMsg(msger,msger.getTo());
+    			this.monitorMsg(msger);
     		}
     	}
-    	//:NAME	#1_是
-/*        if(val1[0].equals("NAME")){
-            String[] val2=val1[1].split("_");
-            for(ChatWebSocket user:users){
-                if (user.username.equals(val2[0])){
-                    user.username=val2[1];
-                }
-            }
-        }else if(val1[0].equals("MSG")){
-            String[] val2=val1[1].split("_");
-            //boolean targetOnline = false;
-            for(ChatWebSocket user : users){
-            	//查找当前所有存在实例，发送
-                if (user.username.equals(val2[1])){
-                    try {
-                        CharBuffer temp = CharBuffer.wrap(data);
-                        user.getWsOutbound().writeTextMessage(temp);
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                        return;
-                    }
-                }
-            }     
-            cacheDaoImpl.saveList(val2[1], val2[0]+" 对你说："+val2[2], 3600);
-        }
-        else{
-            System.out.println("ERROR");
-        }*/
 
     }
 
     private void registerUser(Msger msger){
-        for(ChatWebSocket user:users){
+        for(ChatWebSocket user : WSocket.users){
             if (user.userId.equals(msger.getRegId())){
                 user.username=msger.getFrom();
             }
         }
     }
     
-    //根据消息发送信息
+    /**
+     * 根据消息接收者，发送信息
+     * @param msger 消息体
+     * @param msgGetter 消息接收者
+     */
     @SuppressWarnings("deprecation")
-	private void pushMsg(Msger msger){
-    	System.out.println("发送消息需要："+msger);
-        for(ChatWebSocket user : users){
-        	//查找当前所有存在实例，发送
-            if (user.username.equals(msger.getTo())){
-                try {
-                    CharBuffer temp = CharBuffer.wrap(msger.toString());
-                    user.getWsOutbound().writeTextMessage(temp);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                    return;
-                }
-            }
-        }
-        //消息放入redis
-        cacheDaoImpl.saveList(msger.getTo(), msger.toString(), 3600*2);
+	private void pushMsg(Msger msger,String msgGetter){
+    	if (msgGetter != null && !"".equals(msgGetter)){
+    		for(ChatWebSocket user : WSocket.users){
+    			//查找当前所有存在实例，发送
+    			if (user.username.equals(msgGetter)){
+    				try {
+    					CharBuffer temp = CharBuffer.wrap(msger.toString());
+    					user.getWsOutbound().writeTextMessage(temp);
+    				} catch (IOException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    					return;
+    				}
+    			}
+    		}
+    		//消息放入redis
+    		cacheDaoImpl1.saveList(msger.getTo(), msger.toString(), 3600*2);
+    	}else{
+    		System.err.println("====  msgGetter is nil   ===");
+    	}
+    }
+    
+    /**
+     * 将拿到的消息发送给有监听请求的用户
+     * @param catchedMsg
+     */
+    private void monitorMsg(Msger msger){
+    	//cacheDaoImpl2.loadHashBy(kName, k2Name);
+    	String monitorName = null;
+    	try {
+    		monitorName = cacheDaoImpl2.randomGet();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	if (monitorName != null){
+    		this.pushMsg(msger, monitorName);
+    	}
+    	
     }
     
     /**
@@ -131,14 +134,14 @@ public class ChatWebSocket extends MessageInbound{
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        users.add(this);
+        WSocket.users.add(this);
     }
     
     
     @Override
     protected void onClose(int status) {
     	// TODO Auto-generated method stub
-    	users.remove(this);
+    	WSocket.users.remove(this);
     	WSocket.USERNUMBER --;
     	super.onClose(status);
     }

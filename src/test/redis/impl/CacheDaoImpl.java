@@ -5,12 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+
 import redis.clients.jedis.Jedis;
 import test.redis.ICacheDao;
 import test.redis.RedisUtils;
 
 public class CacheDaoImpl implements ICacheDao{
 
+	//信息发送数据库
+	private int data_db = 0;//监控需求库：monitor_db
+	
 	@Override
 	public void saveHash(String k1Name,String k2Name,String valName, int liveSecond) {
 		// TODO Auto-generated method stub
@@ -21,7 +25,7 @@ public class CacheDaoImpl implements ICacheDao{
 			System.err.println("ERROR PARAMETERS HERE!");
 			return;
 		}
-		Jedis jds = RedisUtils.getJedis();
+		Jedis jds = RedisUtils.getJedis(data_db);
 		jds.hset(k1Name.getBytes(), k2Name.getBytes(), valName.getBytes());
 		if (liveSecond > 0){
 			jds.expire(k1Name.getBytes(),liveSecond);
@@ -37,7 +41,7 @@ public class CacheDaoImpl implements ICacheDao{
 			System.err.println("ERROR PARAMETERS HERE!");
 			return null;
 		}
-		Jedis jds = RedisUtils.getJedis();
+		Jedis jds = RedisUtils.getJedis(data_db);
 		byte[] btStr = jds.hget(k1Name.getBytes(), k2Name.getBytes());
 		RedisUtils.returnResource(jds);
 		return new String(btStr,"gbk");
@@ -66,7 +70,7 @@ public class CacheDaoImpl implements ICacheDao{
 			System.err.println("ERROR PARAMETERS HERE!");
 			return;
 		}
-		Jedis jds = RedisUtils.getJedis();
+		Jedis jds = RedisUtils.getJedis(data_db);
 		jds.lpush(k1Name.getBytes(), valName.getBytes());
 		if (liveSecond > 0){
 			jds.expire(k1Name.getBytes(),liveSecond);
@@ -83,7 +87,7 @@ public class CacheDaoImpl implements ICacheDao{
 			return null;
 		}
 		List<String> msgList = new ArrayList<>();
-		Jedis jds = RedisUtils.getJedis();
+		Jedis jds = RedisUtils.getJedis(data_db);
 		byte[] btStr = null;
 		for (int ai = jds.llen(k1Name.getBytes()).intValue() ; ai > 0 ;ai --){
 			btStr = jds.lpop(k1Name.getBytes());
@@ -91,12 +95,45 @@ public class CacheDaoImpl implements ICacheDao{
 				msgList.add(new String(btStr,"gbk"));
 			}
 		}
-		//btStr = null;
-		
-		
-		
 		RedisUtils.returnResource(jds);
 		return msgList;
 	}
+
+	@Override
+	public ICacheDao setData_db(int data_db) {
+		this.data_db = data_db;
+		return this;
+	}
+
+	@Override
+	public void save(String key, String val, int liveSecond) {
+		// TODO Auto-generated method stub
+		if (key == null || "".equals(key) 
+				||val == null || "".equals(val) ){
+			System.err.println("ERROR PARAMETERS HERE!");
+			return;
+		}
+		Jedis jds = RedisUtils.getJedis(data_db);
+		jds.set(key.getBytes(), val.getBytes());
+		if (liveSecond > 0){
+			jds.expire(key.getBytes(),liveSecond);
+		}
+		RedisUtils.returnResource(jds);
+	}
+
+	@Override
+	public String randomGet() throws UnsupportedEncodingException {
+		// TODO Auto-generated method stub
+		Jedis jds = RedisUtils.getJedis(data_db);
+		byte[] btStr = jds.randomBinaryKey();
+		if (btStr == null || btStr.length <= 0){
+			return null;
+		}
+		byte[] btStrVal = jds.get(btStr);
+		RedisUtils.returnResource(jds);
+		return new String(btStrVal,"gbk");
+	}
+	
+	
 	
 }

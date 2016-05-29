@@ -53,10 +53,11 @@ public class RedisUtils {
      * »ñÈ¡JedisÊµÀý
      * @return
      */
-    public synchronized static Jedis getJedis() {
+    public synchronized static Jedis getJedis(int dtIndex) {
         try {
             if (jedisPool != null) {
                 Jedis resource = jedisPool.getResource();
+                resource.select(dtIndex);
                 return resource;
             } else {
                 return null;
