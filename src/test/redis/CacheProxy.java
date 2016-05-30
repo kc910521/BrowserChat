@@ -6,7 +6,7 @@ import java.util.List;
 import test.redis.impl.CacheDaoImpl;
 
 /**
- * 第二个redis库的redis方法
+ * redis库的代理redis方法
  * @author KCSTATION
  *
  */
